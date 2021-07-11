@@ -51,14 +51,16 @@ def get_sys_user_info_list(page,pagesize,name):
 
 def add_sys_user(username,password,REAL_NAME,SEX,EMAIL,
                        PHONE,MOBILE,DESCRIPTION,ISACTIVE,CREATEBY,
-                       REMOVE):
+                       REMOVE):              ###改
     session = Session()
     user=SysUser(username=username,password=password,REAL_NAME=REAL_NAME,SEX=SEX,EMAIL=EMAIL,PHONE=PHONE,MOBILE=MOBILE,
                  DESCRIPTION=DESCRIPTION,ISACTIVE=ISACTIVE,CREATEBY=CREATEBY,REMOVE=REMOVE)
     try:
         result = session.add(user)
         session.commit()
-        print(result)
+        this=session.query(SysUser).filter(SysUser.username==username).first()
+        session.query(SysUser).filter(SysUser.username==username).update({'CREATEBY':this.ID,'UPDATEDBY':this.ID})
+        session.commit()
     except Exception as e:
         logging.ERROR(e)
         return False

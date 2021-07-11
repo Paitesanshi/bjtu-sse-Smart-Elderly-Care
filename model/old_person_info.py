@@ -8,7 +8,7 @@ Base = declarative_base()
 class OldPersonInfo(Base):
 #students表是我本地数据库testdab中已存在的
     __tablename__ = 'oldperson_info'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    ID = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50),nullable=False)
     gender=Column(String(5))
     phone=Column(String(50))

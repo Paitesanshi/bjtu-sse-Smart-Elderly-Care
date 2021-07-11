@@ -2,7 +2,8 @@ from flask import Flask, Blueprint, request, make_response, jsonify, render_temp
 from dal import oldperson_info,sys_user,event_info,employee_info,volunteer_info
 from common import sqlInit,redisInit
 from common import util
-import  os
+import os
+import json
 index_page = Blueprint("index_page", __name__)
 
 
@@ -19,9 +20,9 @@ def make_error_response(data,messsage):
     response['data']=data
     return response
 
-@index_page.route("/")
-def text():
-    return "text/html"
+# @index_page.route("/")
+# def text():
+#     return "text/html"
 
 
 @index_page.route("/text_same")
@@ -55,11 +56,13 @@ def template():
     return render_template("index.html", **context)
 
 
-@index_page.route('/login', methods=['POST'])
+@index_page.route('/', methods=['POST'])
 def login():
-    username=request.values.get("username")
-    password=request.values.get("password")
+    username=request.get_json()['username']
+    password=request.get_json()['password']
+    print(username,password)
     result=sys_user.get_sys_user_by_username(username)
+    # print(result.username,result.password)
     if result==None:
         return make_error_response(None,"用户名不存在")
     if result.password==password:
@@ -72,19 +75,19 @@ def login():
 
 @index_page.route('/register', methods=['POST'])
 def register():
-    username=request.values.get("username")
-    password=request.values.get("password")
-    REAL_NAME = request.values.get("REAL_NAME")
-    SEX = request.values.get("SEX")
-    EMAIL = request.values.get("EMAIL")
-    PHONE = request.values.get("PHONE")
-    MOBILE = request.values.get("MOBILE")
-    DESCRIPTION=""
+    username=request.get_json()['username']
+    password=request.get_json()['password']
+    REAL_NAME = request.get_json()['REAL_NAME']
+    SEX = request.get_json()['SEX']
+    EMAIL = request.get_json()['EMAIL']
+    PHONE = request.get_json()['PHONE']
+    MOBILE = request.get_json()['MOBILE']
+    DESCRIPTION = request.get_json()['DESCRIPTION']
     ISACTIVE='active'
-    CREATEBY=REAL_NAME
+    CREATEBY=0
     print(username,password)
     result=sys_user.get_sys_user_by_username(username)
-    print(result.password)
+    # print(result.password)
     if result!=None:
         return make_error_response(None,"用户名已存在")
     result=sys_user.add_sys_user(username,password,REAL_NAME,SEX,EMAIL,PHONE,MOBILE,DESCRIPTION,ISACTIVE,CREATEBY,0)
@@ -95,59 +98,63 @@ def register():
 
 
 
-@index_page.route('/getOldPersonList', methods=['POST'])
+@index_page.route('/getOldPersonList', methods=['GET'])
 def get_old_person_list():
-    page=int(request.values.get("page"))
-    pagesize=int(request.values.get("pagesize"))
+    page=int(request.values.get("pageNow"))
+    pagesize=int(request.values.get("pageSize"))
     content=request.values.get("content")
     persons=[]
     count=0
-    if content=='':
+    if content==None:
         olds = oldperson_info.get_old_person_info_list(page, pagesize, content)
         count = oldperson_info.get_old_person_info_count(content)
         persons=sqlInit.query_to_dict(olds)
     else:
         if util.is_number(content):
-            pass
+            olds = oldperson_info.get_old_person_info_by_id(content)
+            count = oldperson_info.get_old_person_info_count_id(content)
+            persons = sqlInit.query_to_dict(olds)
         else:
-            old=oldperson_info.get_old_person_info_by_id(content)
-            if old!=None:
-                persons.append(sqlInit.query_to_dict(old))
-                count=1
+            # old=oldperson_info.get_old_person_info_by_name(content)
+            # if old!=None:
+            #     persons.append(sqlInit.query_to_dict(old))
+            #     count=1
             olds = oldperson_info.get_old_person_info_list(page, pagesize, content)
             count = oldperson_info.get_old_person_info_count(content)
             persons = sqlInit.query_to_dict(olds)
     data={}
     data['olds']=persons
     data['total']=count
+    print(data)
     return make_success_response(data,"success")
 
 @index_page.route('/addOldPerson', methods=['POST'])
 def add_old_person():
-    username=request.values.get("username")
-    gender=request.values.get("gender")
-    phone=request.values.get("phone")
-    id_card=request.values.get("id_card")
-    birthday=request.values.get("birthday")
-    checkin_date=request.values.get("checkin_date")
-    checkout_date = request.values.get("checkout_date")
-    room_number=request.values.get("room_number")
-    firstguardian_phone = request.values.get("firstguardian_phone")
-    firstguardian_name = request.values.get("firstguardian_name")
-    firstguardian_relationship = request.values.get("firstguardian_relationship")
-    firstguardian_wechat = request.values.get("firstguardian_wechat")
-    secondguardian_phone = request.values.get("secondguardian_phone")
-    secondguardian_name = request.values.get("secondguardian_name")
-    secondguardian_relationship = request.values.get("secondguardian_relationship")
-    secondguardian_wechat = request.values.get("secondguardian_wechat")
-    health_state = request.values.get("health_state")
-    CREATEBY = request.values.get("CREATEBY")
-    UPDATEBY = request.values.get("UPDATEBY")
-    REMOVE=0
 
-    re=oldperson_info.add_old_person_info(username,gender,phone,id_card,birthday,checkin_date,checkout_date,
-                                          "",username+"avatar.jpg",room_number,firstguardian_name,firstguardian_relationship,firstguardian_phone,firstguardian_wechat,
-                                          secondguardian_name,secondguardian_relationship,secondguardian_phone,secondguardian_wechat,health_state)
+    username=request.get_json()['form'].get("username")
+    gender=request.get_json()['form'].get("gender")
+    phone=request.get_json()['form'].get("phone")
+    id_card=request.get_json()['form'].get("id_card")
+    birthday=request.get_json()['form'].get("birthday")
+    checkin_date=request.get_json()['form'].get("checkin_date")
+    checkout_date = request.get_json()['form'].get("checkout_date")
+    room_number=request.get_json()['form'].get("room_number")
+    firstguardian_phone = request.get_json()['form'].get("firstguardian_phone")
+    firstguardian_name = request.get_json()['form'].get("firstguardian_name")
+    firstguardian_relationship = request.get_json()['form'].get("firstguardian_relationship")
+    firstguardian_wechat = request.get_json()['form'].get("firstguardian_wechat")
+    secondguardian_phone = request.get_json()['form'].get("secondguardian_phone")
+    secondguardian_name = request.get_json()['form'].get("secondguardian_name")
+    secondguardian_relationship = request.get_json()['form'].get("secondguardian_relationship")
+    secondguardian_wechat = request.get_json()['form'].get("secondguardian_wechat")
+    DESCRIPTION=request.get_json()['form'].get("DESCRIPTION")
+    health_state = request.get_json()['form'].get("health_state")
+    CREATEBY = request.get_json()['form'].get("CREATEBY")
+    UPDATEBY = request.get_json()['form'].get("UPDATEBY")
+    REMOVE=0
+    # re=oldperson_info.add_old_person_info(username,gender,phone,id_card,birthday,checkin_date,checkout_date,
+    #                                       "",id_card+".jpg",room_number,firstguardian_name,firstguardian_relationship,firstguardian_phone,firstguardian_wechat,
+    #                                       secondguardian_name,secondguardian_relationship,secondguardian_phone,secondguardian_wechat,health_state,DESCRIPTION)
 
     return make_success_response(None,"添加成功 ")
 
@@ -182,28 +189,22 @@ def delete_old_person():
     return make_success_response(None,"添加成功 ")
 
 
-# @index_page.route('/getSysUserList', methods=['GET'])
-# def get_sys_user_list():
-#     page=request.values.get("page")
-#     pagesize=request.values.get("pagesize")
-#     username=request.values.get("username")
-#     criteria={}
-#     if username!='':
-#         criteria['username']=username
-#     users=oldperson_info.get_old_person_info_list(page,pagesize,criteria)
-#     total=oldperson_info.get_old_person_info_count(criteria)
-#     data={}
-#     data['olds']=sqlInit.query_to_dict(olds)
-#     data['total']=total
-#     return make_success_response(data,"success")
+@index_page.route('/getSysUser', methods=['GET'])
+def get_sys_user():
+    ID=int(request.args.get("ID"))
+    re=sys_user.get_sys_user_by_id(ID)
+    result=sqlInit.query_to_dict(re)
+    return make_success_response(result,"success")
 
 @index_page.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
         f = request.files['file']
-        name=request.values.get("name")
+        print(request.form)
+        # name=request.values.get("name")
+        name=request.form['name']
         base_path = os.path.abspath(os.path.dirname(__file__))
-        upload_path = os.path.join(base_path, 'static\\uploads\\') + "%s" % (name)
+        upload_path = os.path.join(base_path, 'uploads\\') + "%s" % (name)
         f.save(upload_path)
         return make_success_response(None,"success")
 
@@ -216,7 +217,7 @@ def display_img(filename):
             pass
         else:
             image_data = open(
-                base_path + '/static/uploads/' + filename, "rb").read()
+                base_path + '\\uploads\\' + filename, "rb").read()
             response = make_response(image_data)
             response.headers['Content-Type'] = 'image/jpg'
             return response

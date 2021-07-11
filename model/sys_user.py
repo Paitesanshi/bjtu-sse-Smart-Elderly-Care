@@ -8,7 +8,7 @@ Base = declarative_base()
 class SysUser(Base):
 #students表是我本地数据库testdab中已存在的
     __tablename__ = 'sys_user'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    ID = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50),nullable=False)
     password=Column(String(50))
     REAL_NAME=Column(String(50))
