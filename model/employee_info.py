@@ -21,8 +21,8 @@ class EmployeeInfo(Base):
     DESCRIPTION=Column(String(200))
     ISACTIVE=Column(String(10))
     CREATED=Column(DateTime)
-    CREATEDBY=Column(Integer)
-    UPDATE=Column(DateTime)
+    CREATEBY=Column(Integer)
+    UPDATED=Column(DateTime)
     UPDATEBY=Column(Integer)
     REMOVE=Column(CHAR)
 

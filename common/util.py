@@ -1,3 +1,5 @@
+from datetime import datetime
+from dateutil.parser import parse
 def is_number(s):
     try:
         float(s)
@@ -13,6 +15,9 @@ def is_number(s):
         pass
 
     return False
+
+def getAge(date):
+    return datetime.now().year-date.year
 
 #
 # def query_to_dict(model_list):

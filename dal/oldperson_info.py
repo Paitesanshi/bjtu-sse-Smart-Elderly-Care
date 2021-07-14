@@ -3,8 +3,7 @@ from common import sqlInit
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import or_
 import logging
-from model import guardian
-
+from datetime import datetime
 Session = sessionmaker(bind=sqlInit.db)
 
 
@@ -13,7 +12,7 @@ def get_old_person_info_by_id(id):    ##改
     try:
         result = session.query(OldPersonInfo).filter(OldPersonInfo.ID==id,OldPersonInfo.REMOVE==0).all()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -23,7 +22,7 @@ def get_old_person_info_by_name(username):
     try:
         result = session.query(OldPersonInfo).filter(OldPersonInfo.username==username,OldPersonInfo.REMOVE==0).first()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -32,12 +31,12 @@ def get_old_person_info_list(page,pagesize,username):
     session = Session()
     try:
         if username==None:
-            result = session.query(OldPersonInfo).limit(
+            result = session.query(OldPersonInfo).filter(OldPersonInfo.REMOVE==0).limit(
                 pagesize).offset((page - 1) * pagesize).all()
         else:
             result = session.query(OldPersonInfo).filter(OldPersonInfo.username.like("%"+username+"%"),OldPersonInfo.REMOVE==0).limit(pagesize).offset((page-1)*pagesize).all()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -49,13 +48,13 @@ def get_old_person_info_count(content):
         else:
             result = session.query(OldPersonInfo).filter(OldPersonInfo.username.like("%"+content+"%")).count()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
 
 
-def get_old_person_info_count_id(content):    #####
+def get_old_person_info_count_by_id(content):   
     session = Session()
     try:
         if content==None:
@@ -63,55 +62,64 @@ def get_old_person_info_count_id(content):    #####
         else:
             result = session.query(OldPersonInfo).filter(OldPersonInfo.ID==content).count()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
 
 def add_old_person_info(username,gender,phone,id_card,birthday,checkin_date,checkout_date,imgset_dir,profile_photo,room_number,
                               firstguardian_name,firstguardian_relationship, firstguardian_phone, firstguardian_wechat
-                              ,secondguardian_name,secondguardian_relationship,secondguardian_phone,secondguardian_wechat,health_state,DESCRIPTION):
+                              ,secondguardian_name,secondguardian_relationship,secondguardian_phone,secondguardian_wechat,health_state,DESCRIPTION,CREATEBY):
     session = Session()
     person=OldPersonInfo(username=username,gender=gender,phone=phone,id_card=id_card,birthday=birthday,
                            checkin_date=checkin_date,checkout_date=checkout_date,imgset_dir=imgset_dir,
                            profile_photo=profile_photo,room_number=room_number,
                            firstguardian_name=firstguardian_name,firstguardian_wechat=firstguardian_wechat,firstguardian_phone=firstguardian_phone,
                            firstguardian_relationship=firstguardian_relationship,secondguardian_name=secondguardian_name,secondguardian_relationship=secondguardian_relationship,secondguardian_phone=secondguardian_phone,
-                           secondguardian_wechat=secondguardian_wechat,health_state=health_state,DESCRIPTION=DESCRIPTION)
+                           secondguardian_wechat=secondguardian_wechat,health_state=health_state,DESCRIPTION=DESCRIPTION,CREATEBY=CREATEBY,REMOVE=0)
+    p={}
     try:
         result = session.add(person)
+        session.flush()
+        p=sqlInit.query_to_dict(person)
+        # session.query(OldPersonInfo).filter(OldPersonInfo.id==p.id).update({'imgset_dir':p.id,'profile_photo':p.id+".jpg"})
         session.commit()
     except Exception as e:
-        logging.ERROR(e)
-        return False
+        logging.error(e)
+        return None
     session.close()
-    return True
+    return p
 
-def update_oldperson_info_by_id(id,username,password,REAL_NAME,SEX,EMAIL,
-                       PHONE,MOBILE,DESCRIPTION,ISACTIVE,CREATEBY,UPDATEBY,
-                       REMOVE):
+def update_oldperson_info_by_id(ID,username,gender,phone,id_card,birthday,checkin_date,checkout_date,imgset_dir,profile_photo,room_number,
+                              firstguardian_name,firstguardian_relationship, firstguardian_phone, firstguardian_wechat
+                              ,secondguardian_name,secondguardian_relationship,secondguardian_phone,secondguardian_wechat,health_state,DESCRIPTION,UPDATEBY):
     session = Session()
 
-    user=OldPersonInfo(ID=id,username=username,password=password,REAL_NAME=REAL_NAME,SEX=SEX,EMAIL=EMAIL,PHONE=PHONE,MOBILE=MOBILE,
-                 DESCRIPTION=DESCRIPTION,ISACTIVE=ISACTIVE,CREATEBY=CREATEBY,UPDATEBY=UPDATEBY,REMOVE=REMOVE)
+    person=OldPersonInfo(ID=ID,username=username,gender=gender,phone=phone,id_card=id_card,birthday=birthday,
+                           checkin_date=checkin_date,checkout_date=checkout_date,imgset_dir=imgset_dir,
+                           profile_photo=profile_photo,room_number=room_number,
+                           firstguardian_name=firstguardian_name,firstguardian_wechat=firstguardian_wechat,firstguardian_phone=firstguardian_phone,
+                           firstguardian_relationship=firstguardian_relationship,secondguardian_name=secondguardian_name,secondguardian_relationship=secondguardian_relationship,secondguardian_phone=secondguardian_phone,
+                           secondguardian_wechat=secondguardian_wechat,health_state=health_state,DESCRIPTION=DESCRIPTION,UPDATEBY=UPDATEBY)
     try:
-        u = user.__dict__
+        u = person.__dict__
         u.pop("_sa_instance_state")
-        row= session.query(OldPersonInfo).filter(OldPersonInfo.ID==id).update(u)
+        row= session.query(OldPersonInfo).filter(OldPersonInfo.ID==ID).update(u)
         session.commit()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return False
     session.close()
     return True
 
-def delete_old_person_info_by_id(id):
+def delete_old_person_info_by_id(id,UPDATEBY):
     session = Session()
     try:
-        session.query(OldPersonInfo).filter(OldPersonInfo.ID==id).update({'REMOVE':1})
+        dt=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        session.query(OldPersonInfo).filter(OldPersonInfo.ID==id).update({'REMOVE':1,'checkout_date':dt,'UPDATEBY':UPDATEBY})
         session.commit()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return False
     session.close()
     return True

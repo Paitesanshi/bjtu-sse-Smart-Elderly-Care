@@ -14,7 +14,7 @@ class EventInfo(Base):
     event_location=Column(String(200))
     event_desc=Column(String(200))
     oldperson_id=Column(Integer)
-
+    img_dir=Column(String(100))
     __table_args__ = {
         "mysql_charset": "utf8"
     }

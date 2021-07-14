@@ -11,9 +11,9 @@ Session = sessionmaker(bind=sqlInit.db)
 def get_sys_user_by_id(id):
     session = Session()
     try:
-        result = session.query(SysUser).filter(SysUser.id==id).first()
+        result = session.query(SysUser).filter(SysUser.ID==id).first()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -22,7 +22,7 @@ def get_sys_user_by_username(username):
     try:
         result = session.query(SysUser).filter(SysUser.username==username).first()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -33,7 +33,7 @@ def get_sys_user_count(name):
         result = session.query(SysUser).filter(or_(SysUser.username.like("%"+name+"%"),
                                                    SysUser.REAL_NAME.like("%"+name+"%"))).count()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -44,7 +44,7 @@ def get_sys_user_info_list(page,pagesize,name):
         result = session.query(SysUser).filter(or_(SysUser.username.like("%"+name+"%"),
                                                    SysUser.REAL_NAME.like("%"+name+"%"))).limit(pagesize).offset((page-1)*pagesize).all()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return None
     session.close()
     return result
@@ -62,34 +62,50 @@ def add_sys_user(username,password,REAL_NAME,SEX,EMAIL,
         session.query(SysUser).filter(SysUser.username==username).update({'CREATEBY':this.ID,'UPDATEDBY':this.ID})
         session.commit()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return False
     session.close()
     return True
-def update_sys_user_by_id(id,username,password,REAL_NAME,SEX,EMAIL,
+def update_sys_user_by_id(id,username,REAL_NAME,SEX,EMAIL,
                        PHONE,MOBILE,DESCRIPTION,ISACTIVE,UPDATEBY,
                        REMOVE):
     session = Session()
 
-    user=SysUser(id=id,username=username,password=password,REAL_NAME=REAL_NAME,SEX=SEX,EMAIL=EMAIL,PHONE=PHONE,MOBILE=MOBILE,
-                 DESCRIPTION=DESCRIPTION,ISACTIVE=ISACTIVE,UPDATEBY=UPDATEBY,REMOVE=REMOVE)
+    user=SysUser(ID=id,username=username,REAL_NAME=REAL_NAME,SEX=SEX,EMAIL=EMAIL,PHONE=PHONE,MOBILE=MOBILE,
+                 DESCRIPTION=DESCRIPTION,ISACTIVE=ISACTIVE,UPDATEBY=id,REMOVE=REMOVE)
     try:
         u=user.__dict__
         u.pop("_sa_instance_state")
-        row= session.query(SysUser).filter(SysUser.id==id).update(u)
+        row= session.query(SysUser).filter(SysUser.ID==id).update(u)
         session.commit()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return False
     session.close()
     return True
+
+def update_sys_user_password_by_id(id,old_password,new_password):
+    session = Session()
+    try:
+        password=session.query(SysUser).filter(SysUser.ID==id).first()
+        if password.password!=old_password:
+            return 1
+        row= session.query(SysUser).filter(SysUser.ID==id).update({'password':new_password})
+        session.commit()
+    except Exception as e:
+        logging.error(e)
+        return 2
+    session.close()
+    return 0
+
+
 def delete_old_person_info_by_id(id):
     session = Session()
     try:
-        session.query(SysUser).filter(SysUser.id==id).delete()
+        session.query(SysUser).filter(SysUser.ID==id).delete()
         session.commit()
     except Exception as e:
-        logging.ERROR(e)
+        logging.error(e)
         return False
     session.close()
     return True
