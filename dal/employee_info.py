@@ -11,7 +11,7 @@ Session = sessionmaker(bind=sqlInit.db)
 def get_employee_info_by_id(id):
     session = Session()
     try:
-        result = session.query(EmployeeInfo).filter(EmployeeInfo.id==id).first()
+        result = session.query(EmployeeInfo).filter(EmployeeInfo.id==int(id),EmployeeInfo.REMOVE==0).first()
     except Exception as e:
         logging.error(e)
         return None
@@ -21,7 +21,7 @@ def get_employee_info_by_id(id):
 def get_employee_info_by_username(username):
     session = Session()
     try:
-        result = session.query(EmployeeInfo).filter(EmployeeInfo.username==username).first()
+        result = session.query(EmployeeInfo).filter(EmployeeInfo.username==username,EmployeeInfo.REMOVE==0).first()
     except Exception as e:
         logging.error(e)
         return None
@@ -32,9 +32,9 @@ def get_employee_count(content):
     session = Session()
     try:
         if content==None:
-            result = session.query(EmployeeInfo).count()
+            result = session.query(EmployeeInfo).filter(EmployeeInfo.REMOVE==0).count()
         else:
-            result = session.query(EmployeeInfo).filter(EmployeeInfo.username.like("%"+content+"%")).count()
+            result = session.query(EmployeeInfo).filter(EmployeeInfo.username.like("%"+content+"%"),EmployeeInfo.REMOVE==0).count()
     except Exception as e:
         logging.error(e)
         return None
@@ -47,12 +47,53 @@ def get_employee_info_count_by_id(content):
         if content==None:
             result = session.query(EmployeeInfo).count()
         else:
-            result = session.query(EmployeeInfo).filter(EmployeeInfo.ID==content).count()
+            result = session.query(EmployeeInfo).filter(EmployeeInfo.ID==content,EmployeeInfo.REMOVE==0).count()
     except Exception as e:
         logging.error(e)
         return None
     session.close()
     return result    
+
+def get_employee_hire_count_by_day(today,tomorrow):   
+    session = Session()
+    try:
+        result = session.query(EmployeeInfo).filter(EmployeeInfo.hire_date>=today,EmployeeInfo.hire_date<=tomorrow,EmployeeInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result
+
+def get_employee_count_by_remove(remove):
+    session = Session()
+    try:
+        result = session.query(EmployeeInfo).filter(EmployeeInfo.REMOVE==remove).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result
+
+def get_employee_count_by_gender(sex):
+    session = Session()
+    try:
+        result = session.query(EmployeeInfo).filter(EmployeeInfo.gender==sex,EmployeeInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result    
+
+
+def get_employee_resign_count_by_day(today,tomorrow):   
+    session = Session()
+    try:
+        result = session.query(EmployeeInfo).filter(EmployeeInfo.resign_date>=today,EmployeeInfo.resign_date<=tomorrow,EmployeeInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result
 
 def get_employee_info_list(page,pagesize,username):
     session = Session()
@@ -61,7 +102,7 @@ def get_employee_info_list(page,pagesize,username):
             result = session.query(EmployeeInfo).filter(EmployeeInfo.REMOVE==0).limit(
                 pagesize).offset((page - 1) * pagesize).all()
         else:
-            result = session.query(EmployeeInfo).filter_by(EmployeeInfo.username.like("%" + username + "%"),EmployeeInfo.REMOVE==0).limit(pagesize).offset((page-1)*pagesize).all()
+            result = session.query(EmployeeInfo).filter(EmployeeInfo.username.like("%" + username + "%"),EmployeeInfo.REMOVE==0).limit(pagesize).offset((page-1)*pagesize).all()
     except Exception as e:
         logging.error(e)
         return None
@@ -86,6 +127,7 @@ def add_employee_info(username,gender,phone,id_card,birthday,hire_date,DESCRIPTI
         return None
     session.close()
     return p
+
 
 def update_employee_info_by_id(id,username,gender,phone,id_card,birthday,hire_date,DESCRIPTION,UPDATEBY):
     session = Session()

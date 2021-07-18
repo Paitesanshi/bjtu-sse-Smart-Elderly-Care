@@ -52,7 +52,7 @@ def get_event_info_list(page,pagesize,criteria):
             q=q.filter(EventInfo.event_location.like("%"+criteria['event_desc']+"%"))
         if 'oldperson_id' in criteria:
             q=q.filter(EventInfo.oldperson_id==criteria['oldperson_id'])
-        result = q.limit(pagesize).offset((page-1)*pagesize).all()
+        result = q.order_by(EventInfo.event_date.desc()).limit(pagesize).offset((page-1)*pagesize).all()
     except Exception as e:
         logging.error(e)
         return None

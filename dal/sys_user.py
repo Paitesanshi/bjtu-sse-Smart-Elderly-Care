@@ -38,6 +38,16 @@ def get_sys_user_count(name):
     session.close()
     return result
 
+def get_sys_user_count_by_gender(sex):
+    session = Session()
+    try:
+        result = session.query(SysUser).filter(SysUser.SEX==sex,SysUser.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result    
+
 def get_sys_user_info_list(page,pagesize,name):
     session = Session()
     try:
@@ -57,9 +67,9 @@ def add_sys_user(username,password,REAL_NAME,SEX,EMAIL,
                  DESCRIPTION=DESCRIPTION,ISACTIVE=ISACTIVE,CREATEBY=CREATEBY,REMOVE=REMOVE)
     try:
         result = session.add(user)
-        session.commit()
+        session.commit()  
         this=session.query(SysUser).filter(SysUser.username==username).first()
-        session.query(SysUser).filter(SysUser.username==username).update({'CREATEBY':this.ID,'UPDATEDBY':this.ID})
+        session.query(SysUser).filter(SysUser.username==username).update({'CREATEBY':this.ID,'UPDATEBY':this.ID})
         session.commit()
     except Exception as e:
         logging.error(e)

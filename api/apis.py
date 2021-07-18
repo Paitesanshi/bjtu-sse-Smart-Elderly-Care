@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timedelta
 from flask import Flask, Blueprint, request, make_response, jsonify, render_template
 from dal import oldperson_info,sys_user,event_info,employee_info,volunteer_info
 from common import sqlInit,redisInit
@@ -59,6 +61,8 @@ def template():
 
 @index_page.route('/', methods=['POST'])
 def login():
+    print(request.content_type)
+    print(request.headers)
     username=request.get_json()['username']
     password=request.get_json()['password']
     print(username,password)
@@ -124,7 +128,8 @@ def update_sys_user():
         result=sqlInit.query_to_dict(sys_user.get_sys_user_by_username(username))
         return make_success_response(result,"更改成功")
     else:
-        return make_error_response(None,'用户名已存在')
+        result=sqlInit.query_to_dict(sys_user.get_sys_user_by_id(ID))
+        return make_error_response(result,'用户名已存在')
 
 @index_page.route('/updateSysUserPassword', methods=['POST'])
 def update_sys_user_password():
@@ -150,6 +155,7 @@ def get_old_person_list():
     if content==None:
         olds = oldperson_info.get_old_person_info_list(page, pagesize, content)
         count = oldperson_info.get_old_person_info_count(content)
+        print(olds)
         persons=sqlInit.query_to_dict(olds)
     else:
         if util.is_number(content):
@@ -164,6 +170,7 @@ def get_old_person_list():
             olds = oldperson_info.get_old_person_info_list(page, pagesize, content)
             count = oldperson_info.get_old_person_info_count(content)
             persons = sqlInit.query_to_dict(olds)
+    print(persons)
     for i in range(len(persons)):
         persons[i]['birthday']=str(persons[i]['birthday'])
         persons[i]['checkin_date']=str(persons[i]['checkin_date'])
@@ -251,6 +258,11 @@ def delete_old_person():
         return make_success_response(None,"删除成功 ")
     else:
         return make_error_response(None,'删除失败')
+@index_page.route('/getOldPersonSex', methods=['GET'])
+def get_old_person_sex():
+    male=oldperson_info.get_old_person_count_by_gender('m')
+    female=oldperson_info.get_old_person_count_by_gender('f')
+    return make_success_response({'male':male,'female':female},"success")
 
 @index_page.route('/countOldPerson', methods=['GET'])
 def count_old_person():
@@ -284,6 +296,7 @@ def get_employee_list():
     content=request.values.get("content")
     persons=[]
     count=0
+
     if content==None:
         employees = employee_info.get_employee_info_list(page, pagesize, content)
         count = employee_info.get_employee_count(content)
@@ -292,7 +305,8 @@ def get_employee_list():
         if util.is_number(content):
             employees = employee_info.get_employee_info_by_id(content)
             count = 1
-            persons = sqlInit.query_to_dict(employees)
+            person = sqlInit.query_to_dict(employees)
+            persons.append(person)
         else:
             # old=employee_info.get_employee_info_by_name(content)
             # if old!=None:
@@ -302,6 +316,7 @@ def get_employee_list():
             count = employee_info.get_employee_count(content)
             persons = sqlInit.query_to_dict(employees)
     for i in range(len(persons)):
+        print(persons)
         persons[i]['birthday']=str(persons[i]['birthday'])
         persons[i]['hire_date']=str(persons[i]['hire_date'])
         persons[i]['resign_date']=str(persons[i]['resign_date'])
@@ -325,8 +340,6 @@ def add_employee():
     DESCRIPTION=request.get_json()['form'].get("DESCRIPTION")
     CREATEBY=request.get_json()['form'].get("CREATEBY")
     re=employee_info.add_employee_info(username,gender,phone,id_card,birthday,hire_date,id_card+".jpg",DESCRIPTION,'active',CREATEBY)
-    print("-----------------------------------------------------------------------")
-    print(re)
     if re!=None:
         return make_success_response(re,"添加成功 ")
     else:
@@ -359,6 +372,12 @@ def delete_employee():
         return make_success_response(None,"删除成功 ")
     else:
         return make_error_response(None,'删除失败')
+
+@index_page.route('/getEmployeeSex', methods=['GET'])
+def get_employee_sex():
+    male=employee_info.get_employee_count_by_gender('m')
+    female=employee_info.get_employee_count_by_gender('f')
+    return make_success_response({'male':male,'female':female},"success")
 
 @index_page.route('/countEmployee', methods=['GET'])
 def count_employee():
@@ -396,7 +415,8 @@ def get_volunteer_list():
         if util.is_number(content):
             volunteers = volunteer_info.get_volunteer_info_by_id(content)
             count = 1
-            persons = sqlInit.query_to_dict(volunteers)
+            person = sqlInit.query_to_dict(volunteers)
+            persons.append(person)
         else:
             # old=volunteer_info.get_volunteer_info_by_name(content)
             # if old!=None:
@@ -428,6 +448,7 @@ def add_volunteer():
     # resign_date = request.get_json()['form'].get("resign_date")
     DESCRIPTION=request.get_json()['form'].get("DESCRIPTION")
     CREATEBY=request.get_json()['form'].get("CREATEBY")
+    print(CREATEBY)
     re=volunteer_info.add_volunteer_info(name,gender,phone,id_card,birthday,checkin_date,DESCRIPTION,CREATEBY)
     if re!=None:
         return make_success_response(re,"添加成功 ")
@@ -462,6 +483,11 @@ def delete_volunteer():
         return make_success_response(None,"删除成功 ")
     else:
         return make_error_response(None,'删除失败')
+@index_page.route('/getVolunteerSex', methods=['GET'])
+def get_volunteer_sex():
+    male=volunteer_info.get_volunteer_count_by_gender('m')
+    female=volunteer_info.get_volunteer_count_by_gender('f')
+    return make_success_response({'male':male,'female':female},"success")
 
 @index_page.route('/countVolunteer', methods=['GET'])
 def count_volunteer():
@@ -514,7 +540,7 @@ def get_event_list():
         result[i]['id']=i+1+(page-1)*pagesize
         result[i]['event_date']=str(result[i]['event_date'])
         result[i]['event_type']=events[result[i]['event_type']-1]
-    print(result)
+
     data={}
     data['total']=total
     data['events']=result
@@ -552,7 +578,33 @@ def add_event():
         return make_error_response(None,'failed')
 
 
-
+@index_page.route('/countTotal', methods=['GET'])
+def count_total():
+    data={}
+    results=[]
+    now = datetime.now()
+    for i in range(7):
+        result={}
+        result['v_date']=now.strftime("%Y-%m-%d")
+        print(result['v_date'])
+        zeroToday= now - timedelta(hours=now.hour, minutes=now.minute, seconds=now.second,microseconds=now.microsecond)
+        lastToday = zeroToday + timedelta(hours=23, minutes=59, seconds=59)  
+        result['c_old']=oldperson_info.get_old_person_checkin_count_by_day(zeroToday,lastToday)
+        result['l_old']=oldperson_info.get_old_person_checkout_count_by_day(zeroToday,lastToday)
+        result['c_employee']=employee_info.get_employee_hire_count_by_day(zeroToday,lastToday)
+        result['l_employee']=employee_info.get_employee_resign_count_by_day(zeroToday,lastToday)
+        result['c_volu']=volunteer_info.get_volunteer_checkin_count_by_day(zeroToday,lastToday)
+        result['l_volu']=volunteer_info.get_volunteer_checkout_count_by_day(zeroToday,lastToday)
+        print(result['v_date'],result['c_old']) 
+        now=now+timedelta(days=-1)
+        results.append(result)
+    data['old_total']=oldperson_info.get_old_person_info_count_by_remove(0)
+    data['employee_total']=employee_info.get_employee_count_by_remove(0)
+    data['volunteer_total']=volunteer_info.get_volunteer_count_by_remove(0)
+    data['v_num']=results
+    print(data)
+    return make_success_response(data,"success")
+    # return make_success_response(distributed,"success ")
 
 
 

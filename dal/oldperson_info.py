@@ -44,15 +44,24 @@ def get_old_person_info_count(content):
     session = Session()
     try:
         if content==None:
-            result = session.query(OldPersonInfo).count()
+            result = session.query(OldPersonInfo).filter(OldPersonInfo.REMOVE==0).count()
         else:
-            result = session.query(OldPersonInfo).filter(OldPersonInfo.username.like("%"+content+"%")).count()
+            result = session.query(OldPersonInfo).filter(OldPersonInfo.username.like("%"+content+"%"),OldPersonInfo.REMOVE==0).count()
     except Exception as e:
         logging.error(e)
         return None
     session.close()
     return result
 
+def get_old_person_info_count_by_remove(remove):
+    session = Session()
+    try:
+        result = session.query(OldPersonInfo).filter(OldPersonInfo.REMOVE==remove).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result
 
 def get_old_person_info_count_by_id(content):   
     session = Session()
@@ -60,12 +69,41 @@ def get_old_person_info_count_by_id(content):
         if content==None:
             result = session.query(OldPersonInfo).count()
         else:
-            result = session.query(OldPersonInfo).filter(OldPersonInfo.ID==content).count()
+            result = session.query(OldPersonInfo).filter(OldPersonInfo.ID==content,OldPersonInfo.REMOVE==0).count()
     except Exception as e:
         logging.error(e)
         return None
     session.close()
     return result
+def get_old_person_checkin_count_by_day(today,tomorrow):   
+    session = Session()
+    try:
+        result = session.query(OldPersonInfo).filter(OldPersonInfo.checkin_date>=today,OldPersonInfo.checkin_date<=tomorrow,OldPersonInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result
+
+def get_old_person_count_by_gender(sex):
+    session = Session()
+    try:
+        result = session.query(OldPersonInfo).filter(OldPersonInfo.gender==sex,OldPersonInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result    
+
+def get_old_person_checkout_count_by_day(today,tomorrow):   
+    session = Session()
+    try:
+        result = session.query(OldPersonInfo).filter(OldPersonInfo.checkout_date>=today,OldPersonInfo.checkout_date<=tomorrow,OldPersonInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result    
 
 def add_old_person_info(username,gender,phone,id_card,birthday,checkin_date,checkout_date,imgset_dir,profile_photo,room_number,
                               firstguardian_name,firstguardian_relationship, firstguardian_phone, firstguardian_wechat

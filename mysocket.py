@@ -13,6 +13,7 @@ def test_connect():
 
 @socketio.on('old_person', namespace='/test')
 def test_disconnect(massage):
+    print(massage)
     print(massage["id"])
     print(massage["name"])
     print(massage["type"])

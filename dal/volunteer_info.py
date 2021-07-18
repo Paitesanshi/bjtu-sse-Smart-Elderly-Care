@@ -10,7 +10,7 @@ Session = sessionmaker(bind=sqlInit.db)
 def get_volunteer_info_by_id(id):
     session = Session()
     try:
-        result = session.query(VolunteerInfo).filter(VolunteerInfo.id==id).first()
+        result = session.query(VolunteerInfo).filter(VolunteerInfo.id==id,VolunteerInfo.REMOVE==0).first()
     except Exception as e:
         logging.error(e)
         return None
@@ -20,7 +20,7 @@ def get_volunteer_info_by_id(id):
 def get_volunteer_info_by_name(name):
     session = Session()
     try:
-        result = session.query(VolunteerInfo).filter(VolunteerInfo.name==name).first()
+        result = session.query(VolunteerInfo).filter(VolunteerInfo.name==name,VolunteerInfo.REMOVE==0).first()
     except Exception as e:
         logging.error(e)
         return None
@@ -31,9 +31,9 @@ def get_volunterr_info_count(username):
     session = Session()
     try:
         if username==None:
-            result = session.query(VolunteerInfo).count()
+            result = session.query(VolunteerInfo).filter(VolunteerInfo.REMOVE==0).count()
         else:
-            result = session.query(VolunteerInfo).filter_by(VolunteerInfo.name.like("%" + username + "%")).count()
+            result = session.query(VolunteerInfo).filter(VolunteerInfo.name.like("%" + username + "%"),VolunteerInfo.REMOVE==0).count()
     except Exception as e:
         logging.error(e)
         return None
@@ -47,12 +47,51 @@ def get_volunterr_info_list(page,pagesize,username):
             result = session.query(VolunteerInfo).filter(VolunteerInfo.REMOVE==0).limit(
             pagesize).offset((page - 1) * pagesize).all()
         else:
-            result = session.query(VolunteerInfo).filter_by(VolunteerInfo.name.like("%" + username + "%"),VolunteerInfo.REMOVE==0).limit(pagesize).offset((page-1)*pagesize).all()
+            result = session.query(VolunteerInfo).filter(VolunteerInfo.name.like("%" + username + "%"),VolunteerInfo.REMOVE==0).limit(pagesize).offset((page-1)*pagesize).all()
     except Exception as e:
         logging.error(e)
         return None
     session.close()
     return result
+
+def get_volunteer_checkin_count_by_day(today,tomorrow):   
+    session = Session()
+    try:
+        result = session.query(VolunteerInfo).filter(VolunteerInfo.checkin_date>=today,VolunteerInfo.checkin_date<=tomorrow,VolunteerInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result   
+def get_volunteer_count_by_remove(remove):
+    session = Session()
+    try:
+        result = session.query(VolunteerInfo).filter(VolunteerInfo.REMOVE==remove).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result
+
+def get_volunteer_count_by_gender(sex):
+    session = Session()
+    try:
+        result = session.query(VolunteerInfo).filter(VolunteerInfo.gender==sex,VolunteerInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result       
+
+def get_volunteer_checkout_count_by_day(today,tomorrow):   
+    session = Session()
+    try:
+        result = session.query(VolunteerInfo).filter(VolunteerInfo.checkout_date>=today,VolunteerInfo.checkout_date<=tomorrow,VolunteerInfo.REMOVE==0).count()
+    except Exception as e:
+        logging.error(e)
+        return None
+    session.close()
+    return result  
 
 def add_volunteer_info(username,gender,phone,id_card,birthday,checkin_date,
                             DESCRIPTION,CREATEBY):
